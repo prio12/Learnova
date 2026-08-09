@@ -1,0 +1,15 @@
+# .NET
+**/bin/
+**/obj/
+
+# User secrets / local environment
+**/appsettings.Development.json
+
+# Node / Next.js
+**/node_modules/
+**/.next/
+
+# Environment variables
+**/.env
+**/.env.local
+**/.env.*.local
