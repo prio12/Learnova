@@ -14,6 +14,7 @@ public class AppDbContext : DbContext
     public DbSet<Course> Courses { get; set; }
     public DbSet<Subject> Subjects { get; set; }
     public DbSet<Enrollment> Enrollments { get; set; }
+    public DbSet<Assignment> Assignments { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -50,6 +51,21 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Enrollment>()
         .HasIndex(e => new { e.CourseId, e.StudentId })
         .IsUnique();
+
+        modelBuilder.Entity<Assignment>()
+        .HasOne(a => a.Course)
+        .WithMany()
+        .HasForeignKey(a => a.CourseId);
+
+        modelBuilder.Entity<Assignment>()
+        .HasOne(a => a.Teacher)
+        .WithMany()
+        .HasForeignKey(a => a.TeacherId);
+
+        modelBuilder.Entity<Assignment>()
+        .HasOne(a => a.Subject)
+        .WithMany()
+        .HasForeignKey(a => a.SubjectId);
 
     }
 }
