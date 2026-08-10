@@ -32,5 +32,16 @@ public class CourseController : ControllerBase
         return Ok(courses);
     }
 
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById(Guid id)
+    {
+        var course = await _courseService.GetById(id);
+        if (course == null)
+        {
+            return NotFound(new { message = "Course not found." });
+        }
+        return Ok(course);
+    }
+
 
 }

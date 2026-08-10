@@ -44,4 +44,16 @@ public class CourseService
 
         return courses;
     }
+
+    public async Task<CourseResponse?> GetById(Guid id)
+    {
+        var course = await _context.Courses.Where(c => c.Id == id)
+        .Select(c => new CourseResponse
+        {
+            Name = c.Name,
+            Description = c.Description,
+            Id = c.Id
+        }).FirstOrDefaultAsync();
+        return course;
+    }
 }
