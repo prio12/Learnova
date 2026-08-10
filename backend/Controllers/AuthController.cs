@@ -3,7 +3,7 @@ namespace Learnova.Controllers;
 using Learnova.DTO.Auth;
 using Learnova.Services;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
+
 
 [ApiController]
 [Route("api/[controller]")]
@@ -36,11 +36,4 @@ public class AuthController : ControllerBase
         }
         return Ok(response);
     }
-    [Authorize]
-    [HttpGet("me")]
-    public IActionResult Me()
-    {
-        return Ok(new { message = "You are authenticated!" });
-    }
-
 }

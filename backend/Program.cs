@@ -37,6 +37,7 @@ builder.Services
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<JwtService>();
+builder.Services.AddScoped<CourseService>();
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
