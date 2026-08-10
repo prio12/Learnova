@@ -16,12 +16,21 @@ public class CourseController : ControllerBase
         _courseService = courseService;
     }
 
-    [Authorize(Roles = "Admin")]
-    [HttpPost("addCourse")]
 
+    [Authorize(Roles = "Admin")]
+    [HttpPost]
     public async Task<IActionResult> Create(CourseRequest request)
     {
         CourseResponse response = await _courseService.Create(request);
         return StatusCode(201, response);
     }
+
+    [HttpGet]
+    public async Task<IActionResult> GetAll()
+    {
+        var courses = await _courseService.GetAll();
+        return Ok(courses);
+    }
+
+
 }

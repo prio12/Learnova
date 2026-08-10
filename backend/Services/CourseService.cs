@@ -1,6 +1,7 @@
 using Learnova.Data;
 using Learnova.DTO.Course;
 using Learnova.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace Learnova.Services;
 
@@ -30,5 +31,17 @@ public class CourseService
             Description = course.Description
         };
         return response;
+    }
+
+    public async Task<List<CourseResponse>> GetAll()
+    {
+        var courses = await _context.Courses.Select(c => new CourseResponse
+        {
+            Name = c.Name,
+            Description = c.Description,
+            Id = c.Id
+        }).ToListAsync();
+
+        return courses;
     }
 }
