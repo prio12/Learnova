@@ -24,4 +24,16 @@ public class AuthController : ControllerBase
         }
         return StatusCode(201, response);
     }
+
+    [HttpPost("login")]
+    public async Task<IActionResult> Login(LoginRequest request)
+    {
+        LoginResponse? response = await _authService.Login(request);
+        if (response == null)
+        {
+            return Unauthorized(new { message = "Invalid email or password." });
+        }
+        return Ok(response);
+    }
+
 }

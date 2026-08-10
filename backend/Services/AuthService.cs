@@ -10,10 +10,12 @@ public class AuthService
 {
     private readonly IPasswordHasher<User> _passwordHasher;
     private readonly AppDbContext _context;
-    public AuthService(IPasswordHasher<User> passwordHasher, AppDbContext context)
+    private readonly JwtService _jwtService;
+    public AuthService(IPasswordHasher<User> passwordHasher, AppDbContext context, JwtService jwtService)
     {
         _passwordHasher = passwordHasher;
         _context = context;
+        _jwtService = jwtService;
     }
 
     public string HashPassword(string plainPassword, User user)
@@ -42,6 +44,7 @@ public class AuthService
 
         await _context.Users.AddAsync(user);
         await _context.SaveChangesAsync();
+        var token = _jwtService.GenerateToken(user);
 
         var response = new RegisterResponse
         {
@@ -49,6 +52,7 @@ public class AuthService
             Email = user.Email,
             Name = user.Name,
             Role = user.Role,
+            Token = token,
         };
         return response;
     }
@@ -69,12 +73,15 @@ public class AuthService
             return null;
         }
 
+        var token = _jwtService.GenerateToken(user);
+
         var response = new LoginResponse
         {
             Id = user.Id,
             Name = user.Name,
             Email = user.Email,
-            Role = user.Role
+            Role = user.Role,
+            Token = token,
         };
 
         return response;
