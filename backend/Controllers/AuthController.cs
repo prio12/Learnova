@@ -15,8 +15,13 @@ public class AuthController : ControllerBase
     }
 
     [HttpPost("register")]
-    public async Task Register(RegisterRequest request)
+    public async Task<IActionResult> Register(RegisterRequest request)
     {
-        await _authService.Register(request);
+        RegisterResponse? response = await _authService.Register(request);
+        if (response == null)
+        {
+            return Conflict(new { message = "An account with this email address already exists." });
+        }
+        return StatusCode(201, response);
     }
 }
