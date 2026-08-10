@@ -35,6 +35,8 @@ public class JwtService
         );
 
         var token = new JwtSecurityToken(
+    issuer: "Learnova",
+    audience: "LearnovaClient",
     claims: claims,
     expires: DateTime.UtcNow.AddHours(48),
     signingCredentials: credentials
