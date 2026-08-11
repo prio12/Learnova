@@ -51,5 +51,13 @@ public class SubjectController : ControllerBase
 
         return StatusCode(201, result.Subject);
     }
+
+
+    [HttpGet]
+    public async Task<IActionResult> GetAll()
+    {
+        var subjects = await _subjectService.GetAll();
+        return Ok(subjects);
+    }
 }
 

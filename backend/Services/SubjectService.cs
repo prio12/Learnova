@@ -36,9 +36,13 @@ public class SubjectService
             };
         }
 
+        User? existingTeacher = null;
+
         if (request.TeacherId != null)
         {
-            var existingTeacher = await _context.Users.FirstOrDefaultAsync(u => u.Id == request.TeacherId);
+            existingTeacher = await _context.Users
+                .FirstOrDefaultAsync(u => u.Id == request.TeacherId);
+
             if (existingTeacher == null)
             {
                 return new SubjectCreateResult
@@ -71,7 +75,9 @@ public class SubjectService
             Id = subject.Id,
             Name = subject.Name,
             CourseId = subject.CourseId,
-            TeacherId = subject.TeacherId
+            CourseName = existingCourse.Name,
+            TeacherId = subject.TeacherId,
+            TeacherName = existingTeacher?.Name
         };
 
         return new SubjectCreateResult
@@ -79,5 +85,24 @@ public class SubjectService
             Status = SubjectCreateStatus.Created,
             Subject = response
         };
+    }
+
+    public async Task<List<SubjectResponse>> GetAll()
+    {
+        var subjects = await _context.Subjects
+            .Select(s => new SubjectResponse
+            {
+                Id = s.Id,
+                Name = s.Name,
+                CourseId = s.CourseId,
+                CourseName = s.Course.Name,
+                TeacherId = s.TeacherId,
+                TeacherName = s.Teacher != null
+                    ? s.Teacher.Name
+                    : null
+            })
+            .ToListAsync();
+
+        return subjects;
     }
 }
