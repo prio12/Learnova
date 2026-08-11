@@ -115,4 +115,21 @@ public class EnrollmentService
 
         return enrollments;
     }
+
+
+    public async Task<DeleteEnrollmentStatus> Delete(Guid id)
+    {
+        var enrollment = await _context.Enrollments
+            .FirstOrDefaultAsync(e => e.Id == id);
+
+        if (enrollment == null)
+        {
+            return DeleteEnrollmentStatus.NotFound;
+        }
+
+        _context.Enrollments.Remove(enrollment);
+        await _context.SaveChangesAsync();
+
+        return DeleteEnrollmentStatus.Deleted;
+    }
 }

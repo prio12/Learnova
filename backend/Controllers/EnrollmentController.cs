@@ -87,4 +87,22 @@ public class EnrollmentController : ControllerBase
         return Ok(enrollments);
     }
 
+
+    [Authorize(Roles = "Admin")]
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(Guid id)
+    {
+        var result = await _enrollmentService.Delete(id);
+
+        if (result == DeleteEnrollmentStatus.NotFound)
+        {
+            return NotFound(new
+            {
+                message = "Enrollment not found."
+            });
+        }
+
+        return NoContent();
+    }
+
 }
