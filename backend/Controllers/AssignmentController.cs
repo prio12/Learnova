@@ -204,4 +204,46 @@ public class AssignmentController : ControllerBase
 
         return Ok(result.Assignment);
     }
+
+
+
+    [Authorize(Roles = "Teacher")]
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(Guid id)
+    {
+        var teacherIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (!Guid.TryParse(teacherIdClaim, out var teacherId))
+        {
+            return Unauthorized(new
+            {
+                message = "Invalid teacher identity."
+            });
+        }
+
+        var result = await _assignmentService.Delete(id, teacherId);
+
+        if (result == DeleteAssignmentStatus.AssignmentNotFound)
+        {
+            return NotFound(new
+            {
+                message = "Assignment not found."
+            });
+        }
+
+        if (result == DeleteAssignmentStatus.NotOwner)
+        {
+            return Forbid();
+        }
+
+        if (result == DeleteAssignmentStatus.HasSubmissions)
+        {
+            return Conflict(new
+            {
+                message = "Assignment cannot be deleted because it has submissions."
+            });
+        }
+
+        return NoContent();
+    }
 }

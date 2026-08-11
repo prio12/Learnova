@@ -348,4 +348,36 @@ public class AssignmentService
             Assignment = response
         };
     }
+
+
+    public async Task<DeleteAssignmentStatus> Delete(
+    Guid assignmentId,
+    Guid teacherId)
+    {
+        var assignment = await _context.Assignments
+            .FirstOrDefaultAsync(a => a.Id == assignmentId);
+
+        if (assignment == null)
+        {
+            return DeleteAssignmentStatus.AssignmentNotFound;
+        }
+
+        if (assignment.TeacherId != teacherId)
+        {
+            return DeleteAssignmentStatus.NotOwner;
+        }
+
+        var hasSubmissions = await _context.Submissions
+            .AnyAsync(s => s.AssignmentId == assignmentId);
+
+        if (hasSubmissions)
+        {
+            return DeleteAssignmentStatus.HasSubmissions;
+        }
+
+        _context.Assignments.Remove(assignment);
+        await _context.SaveChangesAsync();
+
+        return DeleteAssignmentStatus.Deleted;
+    }
 }
