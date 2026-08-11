@@ -59,5 +59,46 @@ public class SubjectController : ControllerBase
         var subjects = await _subjectService.GetAll();
         return Ok(subjects);
     }
+
+
+    [Authorize(Roles = "Admin")]
+    [HttpPut("{id}")]
+
+    public async Task<IActionResult> Update(Guid id, SubjectUpdateRequest request)
+    {
+        var result = await _subjectService.Update(id, request);
+
+        if (result.Status == SubjectUpdateStatus.SubjectNotFound)
+        {
+            return NotFound(new { message = "Subject not found." });
+        }
+
+        if (result.Status == SubjectUpdateStatus.SubjectAlreadyExists)
+        {
+            return Conflict(new
+            {
+                message = "A subject already exists with the same name in this course."
+            });
+        }
+
+        if (result.Status == SubjectUpdateStatus.TeacherNotFound)
+        {
+            return NotFound(new
+            {
+                message = "Assigned teacher is not found!"
+            });
+        }
+
+        if (result.Status == SubjectUpdateStatus.UserIsNotTeacher)
+        {
+            return BadRequest(new
+            {
+                message = "The assigned user is not a teacher."
+            });
+        }
+        return Ok(result.Subject);
+    }
+
+
 }
 

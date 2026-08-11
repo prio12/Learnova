@@ -105,4 +105,90 @@ public class SubjectService
 
         return subjects;
     }
+
+
+    public async Task<SubjectUpdateResult> Update(
+    Guid id,
+    SubjectUpdateRequest request)
+    {
+        var subject = await _context.Subjects
+      .FirstOrDefaultAsync(s => s.Id == id);
+
+        if (subject == null)
+        {
+            return new SubjectUpdateResult
+            {
+                Status = SubjectUpdateStatus.SubjectNotFound
+            };
+        }
+
+
+
+        //Checking duplicate subject name inside the course
+        var existingSubject = await _context.Subjects
+    .FirstOrDefaultAsync(s =>
+        s.CourseId == subject.CourseId &&
+        s.Name == request.Name &&
+        s.Id != id);
+
+        if (existingSubject != null)
+        {
+            return new SubjectUpdateResult
+            {
+                Status = SubjectUpdateStatus.SubjectAlreadyExists
+            };
+        }
+
+
+        User? existingTeacher = null;
+
+        if (request.TeacherId != null)
+        {
+            existingTeacher = await _context.Users
+                .FirstOrDefaultAsync(u => u.Id == request.TeacherId);
+
+            if (existingTeacher == null)
+            {
+                return new SubjectUpdateResult
+                {
+                    Status = SubjectUpdateStatus.TeacherNotFound
+                };
+            }
+
+            if (existingTeacher.Role != UserRole.Teacher)
+            {
+                return new SubjectUpdateResult
+                {
+                    Status = SubjectUpdateStatus.UserIsNotTeacher
+                };
+            }
+        }
+
+        subject.Name = request.Name;
+        subject.TeacherId = request.TeacherId;
+
+        await _context.SaveChangesAsync();
+
+        var courseName = await _context.Courses
+    .Where(c => c.Id == subject.CourseId)
+    .Select(c => c.Name)
+    .FirstAsync();
+
+
+        var response = new SubjectResponse
+        {
+            Id = subject.Id,
+            Name = subject.Name,
+            CourseId = subject.CourseId,
+            CourseName = courseName,
+            TeacherId = subject.TeacherId,
+            TeacherName = existingTeacher?.Name
+        };
+
+        return new SubjectUpdateResult
+        {
+            Status = SubjectUpdateStatus.Updated,
+            Subject = response
+        };
+    }
 }
