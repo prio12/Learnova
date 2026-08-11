@@ -220,4 +220,132 @@ public class AssignmentService
 
         return null;
     }
+
+
+    public async Task<AssignmentUpdateResult> Update(
+    Guid assignmentId,
+    Guid teacherId,
+    AssignmentUpdateRequest request)
+    {
+        var assignment = await _context.Assignments
+            .FirstOrDefaultAsync(a => a.Id == assignmentId);
+
+        if (assignment == null)
+        {
+            return new AssignmentUpdateResult
+            {
+                Status = AssignmentUpdateStatus.AssignmentNotFound
+            };
+        }
+
+        if (assignment.TeacherId != teacherId)
+        {
+            return new AssignmentUpdateResult
+            {
+                Status = AssignmentUpdateStatus.NotOwner
+            };
+        }
+
+        assignment.Title = request.Title;
+        assignment.Description = request.Description;
+        assignment.Deadline = request.Deadline;
+        assignment.MaximumMarks = request.MaximumMarks;
+
+        await _context.SaveChangesAsync();
+
+        var response = await _context.Assignments
+            .Where(a => a.Id == assignmentId)
+            .Select(a => new AssignmentResponse
+            {
+                Id = a.Id,
+                Title = a.Title,
+                Description = a.Description,
+
+                CourseId = a.CourseId,
+                CourseName = a.Course.Name,
+
+                SubjectId = a.SubjectId,
+                SubjectName = a.Subject.Name,
+
+                TeacherId = a.TeacherId,
+                TeacherName = a.Teacher.Name,
+
+                Deadline = a.Deadline,
+                MaximumMarks = a.MaximumMarks,
+                Status = a.Status
+            })
+            .FirstAsync();
+
+        return new AssignmentUpdateResult
+        {
+            Status = AssignmentUpdateStatus.Updated,
+            Assignment = response
+        };
+    }
+
+
+    public async Task<AssignmentPublishResult> Publish(
+    Guid assignmentId,
+    Guid teacherId)
+    {
+        var assignment = await _context.Assignments
+            .FirstOrDefaultAsync(a => a.Id == assignmentId);
+
+        if (assignment == null)
+        {
+            return new AssignmentPublishResult
+            {
+                Status = AssignmentPublishStatus.AssignmentNotFound
+            };
+        }
+
+        if (assignment.TeacherId != teacherId)
+        {
+            return new AssignmentPublishResult
+            {
+                Status = AssignmentPublishStatus.NotOwner
+            };
+        }
+
+        if (assignment.Status == AssignmentStatus.Published)
+        {
+            return new AssignmentPublishResult
+            {
+                Status = AssignmentPublishStatus.AlreadyPublished
+            };
+        }
+
+        assignment.Status = AssignmentStatus.Published;
+
+        await _context.SaveChangesAsync();
+
+        var response = await _context.Assignments
+            .Where(a => a.Id == assignmentId)
+            .Select(a => new AssignmentResponse
+            {
+                Id = a.Id,
+                Title = a.Title,
+                Description = a.Description,
+
+                CourseId = a.CourseId,
+                CourseName = a.Course.Name,
+
+                SubjectId = a.SubjectId,
+                SubjectName = a.Subject.Name,
+
+                TeacherId = a.TeacherId,
+                TeacherName = a.Teacher.Name,
+
+                Deadline = a.Deadline,
+                MaximumMarks = a.MaximumMarks,
+                Status = a.Status
+            })
+            .FirstAsync();
+
+        return new AssignmentPublishResult
+        {
+            Status = AssignmentPublishStatus.Published,
+            Assignment = response
+        };
+    }
 }

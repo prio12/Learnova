@@ -125,4 +125,83 @@ public class AssignmentController : ControllerBase
 
         return Ok(assignment);
     }
+
+
+    [Authorize(Roles = "Teacher")]
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(
+    Guid id,
+    AssignmentUpdateRequest request)
+    {
+        var teacherIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (!Guid.TryParse(teacherIdClaim, out var teacherId))
+        {
+            return Unauthorized(new
+            {
+                message = "Invalid teacher identity."
+            });
+        }
+
+        var result = await _assignmentService.Update(
+            id,
+            teacherId,
+            request);
+
+        if (result.Status == AssignmentUpdateStatus.AssignmentNotFound)
+        {
+            return NotFound(new
+            {
+                message = "Assignment not found."
+            });
+        }
+
+        if (result.Status == AssignmentUpdateStatus.NotOwner)
+        {
+            return Forbid();
+        }
+
+        return Ok(result.Assignment);
+    }
+
+
+    [Authorize(Roles = "Teacher")]
+    [HttpPatch("{id}/publish")]
+    public async Task<IActionResult> Publish(Guid id)
+    {
+        var teacherIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+        if (!Guid.TryParse(teacherIdClaim, out var teacherId))
+        {
+            return Unauthorized(new
+            {
+                message = "Invalid teacher identity."
+            });
+        }
+
+        var result = await _assignmentService.Publish(id, teacherId);
+
+        if (result.Status == AssignmentPublishStatus.AssignmentNotFound)
+        {
+            return NotFound(new
+            {
+                message = "Assignment not found."
+            });
+        }
+
+        if (result.Status == AssignmentPublishStatus.NotOwner)
+        {
+            return Forbid();
+        }
+
+        if (result.Status == AssignmentPublishStatus.AlreadyPublished)
+        {
+            return Conflict(new
+            {
+                message = "Assignment is already published."
+            });
+        }
+
+        return Ok(result.Assignment);
+    }
 }
