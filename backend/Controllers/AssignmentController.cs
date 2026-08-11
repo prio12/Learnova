@@ -58,6 +58,12 @@ public class AssignmentController : ControllerBase
             });
         }
 
+        if (result.Status == AssignmentCreateStatus.TeacherNotAssignedToSubject)
+        {
+            return Forbid();
+        }
+        ;
+
         if (result.Status == AssignmentCreateStatus.TeacherNotFound)
         {
             return NotFound(new
@@ -67,5 +73,26 @@ public class AssignmentController : ControllerBase
         }
 
         return StatusCode(201, result.Assignment);
+    }
+
+
+    [Authorize]
+    [HttpGet]
+    public async Task<IActionResult> GetAll()
+    {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var role = User.FindFirstValue(ClaimTypes.Role);
+
+        if (!Guid.TryParse(userIdClaim, out var userId) || string.IsNullOrEmpty(role))
+        {
+            return Unauthorized(new
+            {
+                message = "Invalid user identity."
+            });
+        }
+
+        var assignments = await _assignmentService.GetAll(userId, role);
+
+        return Ok(assignments);
     }
 }

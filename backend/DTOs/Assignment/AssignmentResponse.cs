@@ -1,3 +1,5 @@
+using Learnova.Models;
+
 namespace Learnova.DTO.Assignment;
 
 public class AssignmentResponse
@@ -15,6 +17,8 @@ public class AssignmentResponse
 
     public Guid TeacherId { get; set; }
     public required string TeacherName { get; set; }
+
+    public AssignmentStatus Status { get; set; }
 
     public DateTime Deadline { get; set; }
     public int MaximumMarks { get; set; }

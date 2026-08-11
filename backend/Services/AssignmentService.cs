@@ -48,6 +48,14 @@ public class AssignmentService
             };
         }
 
+        if (existingSubject.TeacherId != teacherId)
+        {
+            return new AssignmentCreateResult
+            {
+                Status = AssignmentCreateStatus.TeacherNotAssignedToSubject
+            };
+        }
+
         var existingTeacher = await _context.Users
             .FirstOrDefaultAsync(u => u.Id == teacherId);
 
@@ -90,7 +98,8 @@ public class AssignmentService
 
 
             Deadline = assignment.Deadline,
-            MaximumMarks = assignment.MaximumMarks
+            MaximumMarks = assignment.MaximumMarks,
+            Status = assignment.Status,
         };
 
         return new AssignmentCreateResult
@@ -98,5 +107,53 @@ public class AssignmentService
             Status = AssignmentCreateStatus.Created,
             Assignment = response
         };
+    }
+
+    public async Task<List<AssignmentResponse>> GetAll(
+      Guid userId,
+      string role)
+    {
+        var query = _context.Assignments.AsQueryable();
+
+        if (role == UserRole.Student.ToString())
+        {
+            query = query
+                .Where(a =>
+                    a.Status == AssignmentStatus.Published &&
+                    _context.Enrollments.Any(e =>
+                        e.StudentId == userId &&
+                        e.CourseId == a.CourseId));
+        }
+        else if (role == UserRole.Teacher.ToString())
+        {
+            query = query
+                .Where(a => a.TeacherId == userId);
+        }
+        // For Admin no filter
+
+        var assignments = await query
+            .Select(a => new AssignmentResponse
+            {
+                Id = a.Id,
+                Title = a.Title,
+                Description = a.Description,
+
+                CourseId = a.CourseId,
+                CourseName = a.Course.Name,
+
+                SubjectId = a.SubjectId,
+                SubjectName = a.Subject.Name,
+
+                TeacherId = a.TeacherId,
+                TeacherName = a.Teacher.Name,
+
+                Deadline = a.Deadline,
+                MaximumMarks = a.MaximumMarks,
+
+                Status = a.Status
+            })
+            .ToListAsync();
+
+        return assignments;
     }
 }

@@ -6,5 +6,6 @@ public enum AssignmentCreateStatus
     SubjectNotFound,
     SubjectDoesNotBelongToCourse,
     TeacherNotFound,
+    TeacherNotAssignedToSubject,
     Created
 }
