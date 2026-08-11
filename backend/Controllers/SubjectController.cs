@@ -100,5 +100,31 @@ public class SubjectController : ControllerBase
     }
 
 
+    [Authorize(Roles = "Admin")]
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(Guid id)
+    {
+        var result = await _subjectService.Delete(id);
+
+        if (result == DeleteSubjectStatus.NotFound)
+        {
+            return NotFound(new
+            {
+                message = "Subject not found."
+            });
+        }
+
+        if (result == DeleteSubjectStatus.HasAssignments)
+        {
+            return Conflict(new
+            {
+                message = "Subject cannot be deleted because it has assignments."
+            });
+        }
+
+        return NoContent();
+    }
+
+
 }
 

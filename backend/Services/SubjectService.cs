@@ -191,4 +191,29 @@ public class SubjectService
             Subject = response
         };
     }
+
+
+    public async Task<DeleteSubjectStatus> Delete(Guid id)
+    {
+        var subject = await _context.Subjects
+            .FirstOrDefaultAsync(s => s.Id == id);
+
+        if (subject == null)
+        {
+            return DeleteSubjectStatus.NotFound;
+        }
+
+        var hasAssignments = await _context.Assignments
+            .AnyAsync(a => a.SubjectId == id);
+
+        if (hasAssignments)
+        {
+            return DeleteSubjectStatus.HasAssignments;
+        }
+
+        _context.Subjects.Remove(subject);
+        await _context.SaveChangesAsync();
+
+        return DeleteSubjectStatus.Deleted;
+    }
 }

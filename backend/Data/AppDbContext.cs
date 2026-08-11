@@ -70,12 +70,14 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Assignment>()
         .HasOne(a => a.Subject)
         .WithMany()
-        .HasForeignKey(a => a.SubjectId);
+        .HasForeignKey(a => a.SubjectId)
+        .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<Submission>()
         .HasOne(s => s.Assignment)
         .WithMany()
-        .HasForeignKey(s => s.AssignmentId);
+        .HasForeignKey(s => s.AssignmentId)
+        .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<Submission>()
         .HasOne(s => s.Student)
