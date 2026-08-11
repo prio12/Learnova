@@ -37,6 +37,7 @@ builder.Services
 builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<JwtService>();
+builder.Services.AddScoped<EnrollmentService>();
 builder.Services.AddScoped<CourseService>();
 builder.Services.AddScoped<SubjectService>();
 builder.Services.AddScoped<AssignmentService>();
