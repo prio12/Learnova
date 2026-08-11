@@ -15,7 +15,7 @@ public class Assignment
     public required string Description { get; set; }
     public required DateTime Deadline { get; set; }
     public required int MaximumMarks { get; set; }
-    public required AssignmentStatus Status { get; set; } = AssignmentStatus.Draft;
+    public AssignmentStatus Status { get; set; } = AssignmentStatus.Draft;
     public Guid CourseId { get; set; }
     public Course Course { get; set; } = null!;
     public Guid SubjectId { get; set; }
