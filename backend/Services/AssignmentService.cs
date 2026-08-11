@@ -156,4 +156,68 @@ public class AssignmentService
 
         return assignments;
     }
+
+
+    public async Task<AssignmentResponse?> GetById(
+    Guid assignmentId,
+    Guid userId,
+    string role)
+    {
+        var assignment = await _context.Assignments
+            .Where(a => a.Id == assignmentId)
+            .Select(a => new AssignmentResponse
+            {
+                Id = a.Id,
+                Title = a.Title,
+                Description = a.Description,
+
+                CourseId = a.CourseId,
+                CourseName = a.Course.Name,
+
+                SubjectId = a.SubjectId,
+                SubjectName = a.Subject.Name,
+
+                TeacherId = a.TeacherId,
+                TeacherName = a.Teacher.Name,
+
+                Deadline = a.Deadline,
+                MaximumMarks = a.MaximumMarks,
+                Status = a.Status
+            })
+            .FirstOrDefaultAsync();
+
+        if (assignment == null)
+        {
+            return null;
+        }
+
+        if (role == UserRole.Admin.ToString())
+        {
+            return assignment;
+        }
+
+        if (role == UserRole.Teacher.ToString())
+        {
+            return assignment.TeacherId == userId
+                ? assignment
+                : null;
+        }
+
+        if (role == UserRole.Student.ToString())
+        {
+            var isEnrolled = await _context.Enrollments
+                .AnyAsync(e =>
+                    e.StudentId == userId &&
+                    e.CourseId == assignment.CourseId);
+
+            if (!isEnrolled || assignment.Status != AssignmentStatus.Published)
+            {
+                return null;
+            }
+
+            return assignment;
+        }
+
+        return null;
+    }
 }

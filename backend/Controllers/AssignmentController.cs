@@ -95,4 +95,34 @@ public class AssignmentController : ControllerBase
 
         return Ok(assignments);
     }
+
+
+    [Authorize]
+    [HttpGet("{id}")]
+    public async Task<IActionResult> GetById(Guid id)
+    {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        var role = User.FindFirstValue(ClaimTypes.Role);
+
+        if (!Guid.TryParse(userIdClaim, out var userId) ||
+            string.IsNullOrEmpty(role))
+        {
+            return Unauthorized(new
+            {
+                message = "Invalid user identity."
+            });
+        }
+
+        var assignment = await _assignmentService.GetById(id, userId, role);
+
+        if (assignment == null)
+        {
+            return NotFound(new
+            {
+                message = "Assignment not found."
+            });
+        }
+
+        return Ok(assignment);
+    }
 }
