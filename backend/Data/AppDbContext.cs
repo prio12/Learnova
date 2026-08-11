@@ -27,7 +27,8 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Subject>()
         .HasOne(s => s.Course)
         .WithMany()
-        .HasForeignKey(s => s.CourseId);
+        .HasForeignKey(s => s.CourseId)
+        .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<Subject>()
         .HasIndex(s => new { s.Name, s.CourseId })
@@ -44,10 +45,12 @@ public class AppDbContext : DbContext
         .WithMany()
         .HasForeignKey(e => e.StudentId);
 
+
         modelBuilder.Entity<Enrollment>()
         .HasOne(e => e.Course)
         .WithMany()
-        .HasForeignKey(e => e.CourseId);
+        .HasForeignKey(e => e.CourseId)
+        .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<Enrollment>()
         .HasIndex(e => new { e.CourseId, e.StudentId })
@@ -56,7 +59,8 @@ public class AppDbContext : DbContext
         modelBuilder.Entity<Assignment>()
         .HasOne(a => a.Course)
         .WithMany()
-        .HasForeignKey(a => a.CourseId);
+        .HasForeignKey(a => a.CourseId)
+        .OnDelete(DeleteBehavior.Restrict);
 
         modelBuilder.Entity<Assignment>()
         .HasOne(a => a.Teacher)

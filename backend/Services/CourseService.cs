@@ -5,6 +5,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Learnova.Services;
 
+public enum DeleteCourseResult
+{
+    NotFound,
+    HasDependencies,
+    Deleted
+}
+
 public class CourseService
 {
     private readonly AppDbContext _context;
@@ -55,5 +62,47 @@ public class CourseService
             Id = c.Id
         }).FirstOrDefaultAsync();
         return course;
+    }
+
+    public async Task<CourseResponse?> Update(Guid id, CourseRequest request)
+    {
+        var course = await _context.Courses.FirstOrDefaultAsync(c => c.Id == id);
+        if (course == null)
+        {
+            return null;
+        }
+        course.Name = request.Name;
+        course.Description = request.Description;
+
+        await _context.SaveChangesAsync();
+        return new CourseResponse
+        {
+            Id = course.Id,
+            Name = course.Name,
+            Description = course.Description
+        };
+    }
+
+    public async Task<DeleteCourseResult> Delete(Guid id)
+    {
+        var course = await _context.Courses.FirstOrDefaultAsync(c => c.Id == id);
+
+        if (course == null)
+        {
+            return DeleteCourseResult.NotFound;
+        }
+
+        var hasRelatedData =
+        await _context.Subjects.AnyAsync(s => s.CourseId == id) ||
+        await _context.Assignments.AnyAsync(a => a.CourseId == id) ||
+        await _context.Enrollments.AnyAsync(e => e.CourseId == id);
+
+        if (hasRelatedData)
+        {
+            return DeleteCourseResult.HasDependencies;
+        }
+        _context.Courses.Remove(course);
+        await _context.SaveChangesAsync();
+        return DeleteCourseResult.Deleted;
     }
 }

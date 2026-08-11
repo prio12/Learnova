@@ -43,5 +43,37 @@ public class CourseController : ControllerBase
         return Ok(course);
     }
 
+    [HttpPut("{id}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Update(Guid id, CourseRequest request)
+    {
+        var course = await _courseService.Update(id, request);
+        if (course == null)
+        {
+            return NotFound(new { message = "Course not found." });
+        }
+        return Ok(course);
+    }
 
+    [HttpDelete("{id}")]
+    [Authorize(Roles = "Admin")]
+    public async Task<IActionResult> Delete(Guid id)
+    {
+        var result = await _courseService.Delete(id);
+
+        if (result == DeleteCourseResult.NotFound)
+        {
+            return NotFound(new { message = "Course not found." });
+        }
+
+        if (result == DeleteCourseResult.HasDependencies)
+        {
+            return Conflict(new
+            {
+                message = "Course cannot be deleted because it has related data."
+            });
+        }
+
+        return NoContent();
+    }
 }
