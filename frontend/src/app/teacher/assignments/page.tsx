@@ -24,6 +24,7 @@ import { Course } from '@/types/course';
 import { Subject } from '@/types/subject';
 import { ApiErrorResponse } from '@/types/api';
 import { toDateTimeLocal } from '@/lib/date';
+import Link from 'next/link';
 
 type ModalMode = 'create' | 'edit';
 
@@ -274,9 +275,12 @@ export default function TeacherAssignmentsPage() {
       header: 'Assignment',
       render: (assignment) => (
         <div className="min-w-0">
-          <p className="font-medium text-(--text-primary)">
+          <Link
+            href={`/teacher/assignments/${assignment.id}`}
+            className="font-medium text-(--text-primary) hover:text-(--accent)"
+          >
             {assignment.title}
-          </p>
+          </Link>
 
           <p className="mt-0.5 text-xs text-(--text-secondary)">
             {assignment.courseName} · {assignment.subjectName}
