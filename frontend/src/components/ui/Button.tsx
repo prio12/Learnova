@@ -13,8 +13,7 @@ export function Button({
   ...props
 }: ButtonProps) {
   const base =
-    'inline-flex items-center justify-center rounded-md font-medium outline-none transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-60 focus:ring-2 focus:ring-offset-1';
-
+    'inline-flex cursor-pointer items-center justify-center rounded-md font-medium outline-none  transition-colors duration-150 disabled:cursor-not-allowed disabled:opacity-60 focus:ring-2 focus:ring-offset-1';
   const variants = {
     primary:
       'bg-(--accent) text-white hover:bg-(--accent-hover) focus:ring-indigo-200',
