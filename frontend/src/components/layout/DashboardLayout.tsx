@@ -2,6 +2,7 @@
 
 import type { ReactNode } from 'react';
 
+import { AccountBar } from '@/components/layout/AccountBar';
 import { MobileSidebar } from '@/components/layout/MobileSidebar';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { useAuthStore } from '@/store/authStore';
@@ -24,6 +25,8 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
 
         <div className="min-w-0 flex-1">
           <MobileSidebar />
+
+          <AccountBar />
 
           <main className="mx-auto w-full max-w-300 px-4 py-6 sm:px-6 lg:px-8">
             {children}

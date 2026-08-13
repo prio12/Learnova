@@ -10,6 +10,7 @@ import { useAuthStore } from '@/store/authStore';
 export function MobileSidebar() {
   const pathname = usePathname();
   const user = useAuthStore((state) => state.user);
+  const logout = useAuthStore((state) => state.logout);
   const [isOpen, setIsOpen] = useState(false);
 
   if (!user) {
@@ -17,6 +18,11 @@ export function MobileSidebar() {
   }
 
   const navigationItems = navigationByRole[user.role];
+
+  const handleLogout = () => {
+    setIsOpen(false);
+    logout();
+  };
 
   return (
     <div className="md:hidden">
@@ -67,6 +73,29 @@ export function MobileSidebar() {
               );
             })}
           </nav>
+
+          <div className="my-3 border-t border-(--border)" />
+
+          <div className="px-3 py-1">
+            <p className="truncate text-sm font-medium text-(--text-primary)">
+              {user.name}
+            </p>
+
+            <p className="mt-0.5 text-xs text-(--text-secondary)">
+              {user.role}
+            </p>
+            <p className="mt-0.5 text-xs text-(--text-secondary)">
+              {user.email}
+            </p>
+
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="mt-3 flex h-9 w-full items-center rounded-md text-left text-sm font-medium text-(--text-secondary) transition-colors duration-150 hover:text-(--text-primary)"
+            >
+              Logout
+            </button>
+          </div>
         </div>
       )}
     </div>
