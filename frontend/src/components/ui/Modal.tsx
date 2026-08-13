@@ -50,7 +50,7 @@ export function Modal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 px-4 py-6"
+      className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/30 px-4 py-4 sm:items-center sm:py-6"
       role="presentation"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) {
@@ -62,7 +62,7 @@ export function Modal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"
-        className={`w-full ${widths[width]} rounded-[10px] border border-(--border) bg-(--surface)`}
+        className={`my-0 w-full ${widths[width]} rounded-[10px] border border-(--border) bg-(--surface) sm:my-6`}
         onMouseDown={(event) => event.stopPropagation()}
       >
         <div className="flex items-center justify-between border-b border-(--border) px-5 py-4">
@@ -77,13 +77,13 @@ export function Modal({
             type="button"
             aria-label="Close dialog"
             onClick={onClose}
-            className="flex h-8 w-8 items-center justify-center rounded-md text-lg leading-none text-(--text-secondary) transition-colors duration-150 hover:bg-(--surface-hover) hover:text-(--text-primary)"
+            className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-md text-lg leading-none text-(--text-secondary) transition-colors duration-150 hover:bg-(--surface-hover) hover:text-(--text-primary)"
           >
             ×
           </button>
         </div>
 
-        <div className="max-h-[calc(100vh-10rem)] overflow-y-auto px-5 py-5">
+        <div className="max-h-[calc(100vh-2rem)] overflow-y-auto px-5 py-5 sm:max-h-[calc(100vh-6rem)]">
           {children}
         </div>
       </section>

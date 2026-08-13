@@ -31,7 +31,7 @@ export function AccountBar() {
   }
 
   return (
-    <header className="hidden h-14 items-center justify-end border-b border-(--border) bg-(--surface) px-4 md:flex md:px-6 lg:px-8">
+    <header className="hidden h-16 items-center justify-end border-b border-(--border) bg-(--surface) px-4 md:flex md:px-6 lg:px-8">
       <div ref={menuRef} className="relative">
         <button
           type="button"
