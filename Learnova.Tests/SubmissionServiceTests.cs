@@ -337,4 +337,252 @@ public class SubmissionServiceTests
             0,
             await context.Submissions.CountAsync());
     }
+
+
+
+
+    [Fact]
+    public async Task Update_ShouldReturnNotOwner_WhenStudentUpdatesAnotherStudentsSubmission()
+    {
+        await using var context = CreateContext();
+
+        var ownerStudent = new User
+        {
+            Id = Guid.NewGuid(),
+            Name = "Submission Owner",
+            Email = "owner@test.com",
+            Role = UserRole.Student,
+            PasswordHash = Guid.NewGuid().ToString()
+        };
+
+        var otherStudent = new User
+        {
+            Id = Guid.NewGuid(),
+            Name = "Other Student",
+            Email = "other@test.com",
+            Role = UserRole.Student,
+            PasswordHash = Guid.NewGuid().ToString()
+        };
+
+        var assignment = new Assignment
+        {
+            Id = Guid.NewGuid(),
+            Title = "Test Assignment",
+            Description = "Test Description",
+            CourseId = Guid.NewGuid(),
+            SubjectId = Guid.NewGuid(),
+            TeacherId = Guid.NewGuid(),
+            Deadline = DateTime.UtcNow.AddDays(1),
+            MaximumMarks = 100,
+            Status = AssignmentStatus.Published
+        };
+
+        var submission = new Submission
+        {
+            Id = Guid.NewGuid(),
+            AssignmentId = assignment.Id,
+            StudentId = ownerStudent.Id,
+            Answer = "Original answer.",
+            SubmittedAt = DateTime.UtcNow,
+            SubmissionStatus = SubmissionStatus.Submitted
+        };
+
+        context.Users.AddRange(ownerStudent, otherStudent);
+        context.Assignments.Add(assignment);
+        context.Submissions.Add(submission);
+
+        await context.SaveChangesAsync();
+
+        var service = new SubmissionService(context);
+
+        var request = new SubmissionUpdateRequest
+        {
+            Answer = "I should not be able to change this."
+        };
+
+        var result = await service.Update(
+            submission.Id,
+            otherStudent.Id,
+            request);
+
+        Assert.Equal(
+            SubmissionUpdateStatus.NotOwner,
+            result.Status);
+
+        Assert.Equal(
+            "Original answer.",
+            submission.Answer);
+    }
+
+
+
+
+    [Fact]
+    public async Task Grade_ShouldReturnMarksExceedMaximum_WhenMarksAreTooHigh()
+    {
+        await using var context = CreateContext();
+
+        var teacher = new User
+        {
+            Id = Guid.NewGuid(),
+            Name = "Test Teacher",
+            Email = "teacher@test.com",
+            Role = UserRole.Teacher,
+            PasswordHash = Guid.NewGuid().ToString()
+        };
+
+        var student = new User
+        {
+            Id = Guid.NewGuid(),
+            Name = "Test Student",
+            Email = "student@test.com",
+            Role = UserRole.Student,
+            PasswordHash = Guid.NewGuid().ToString()
+        };
+
+        var assignment = new Assignment
+        {
+            Id = Guid.NewGuid(),
+            Title = "Test Assignment",
+            Description = "Test Description",
+            CourseId = Guid.NewGuid(),
+            SubjectId = Guid.NewGuid(),
+            TeacherId = teacher.Id,
+            Deadline = DateTime.UtcNow.AddDays(1),
+            MaximumMarks = 100,
+            Status = AssignmentStatus.Published
+        };
+
+        var submission = new Submission
+        {
+            Id = Guid.NewGuid(),
+            AssignmentId = assignment.Id,
+            StudentId = student.Id,
+            Answer = "Student answer.",
+            SubmittedAt = DateTime.UtcNow,
+            SubmissionStatus = SubmissionStatus.Submitted
+        };
+
+        context.Users.AddRange(teacher, student);
+        context.Assignments.Add(assignment);
+        context.Submissions.Add(submission);
+
+        await context.SaveChangesAsync();
+
+        var service = new SubmissionService(context);
+
+        var request = new SubmissionGradeRequest
+        {
+            Marks = 101,
+            Feedback = "Test feedback."
+        };
+
+        var result = await service.Grade(
+            submission.Id,
+            teacher.Id,
+            request);
+
+        Assert.Equal(
+            SubmissionGradeStatus.MarksExceedMaximum,
+            result.Status);
+
+        Assert.Null(result.Submission);
+
+        Assert.Null(submission.Marks);
+        Assert.Null(submission.Feedback);
+
+        Assert.Equal(
+            SubmissionStatus.Submitted,
+            submission.SubmissionStatus);
+    }
+
+
+
+    [Fact]
+    public async Task Grade_ShouldReturnNotOwner_WhenTeacherDoesNotOwnAssignment()
+    {
+        await using var context = CreateContext();
+
+        var assignmentTeacher = new User
+        {
+            Id = Guid.NewGuid(),
+            Name = "Assignment Teacher",
+            Email = "owner.teacher@test.com",
+            Role = UserRole.Teacher,
+            PasswordHash = Guid.NewGuid().ToString()
+        };
+
+        var otherTeacher = new User
+        {
+            Id = Guid.NewGuid(),
+            Name = "Other Teacher",
+            Email = "other.teacher@test.com",
+            Role = UserRole.Teacher,
+            PasswordHash = Guid.NewGuid().ToString()
+        };
+
+        var student = new User
+        {
+            Id = Guid.NewGuid(),
+            Name = "Test Student",
+            Email = "student@test.com",
+            Role = UserRole.Student,
+            PasswordHash = Guid.NewGuid().ToString()
+        };
+
+        var assignment = new Assignment
+        {
+            Id = Guid.NewGuid(),
+            Title = "Test Assignment",
+            Description = "Test Description",
+            CourseId = Guid.NewGuid(),
+            SubjectId = Guid.NewGuid(),
+            TeacherId = assignmentTeacher.Id,
+            Deadline = DateTime.UtcNow.AddDays(1),
+            MaximumMarks = 100,
+            Status = AssignmentStatus.Published
+        };
+
+        var submission = new Submission
+        {
+            Id = Guid.NewGuid(),
+            AssignmentId = assignment.Id,
+            StudentId = student.Id,
+            Answer = "Student answer.",
+            SubmittedAt = DateTime.UtcNow,
+            SubmissionStatus = SubmissionStatus.Submitted
+        };
+
+        context.Users.AddRange(assignmentTeacher, otherTeacher, student);
+        context.Assignments.Add(assignment);
+        context.Submissions.Add(submission);
+
+        await context.SaveChangesAsync();
+
+        var service = new SubmissionService(context);
+
+        var request = new SubmissionGradeRequest
+        {
+            Marks = 85,
+            Feedback = "Unauthorized grading attempt."
+        };
+
+        var result = await service.Grade(
+            submission.Id,
+            otherTeacher.Id,
+            request);
+
+        Assert.Equal(
+            SubmissionGradeStatus.NotOwner,
+            result.Status);
+
+        Assert.Null(result.Submission);
+
+        Assert.Null(submission.Marks);
+        Assert.Null(submission.Feedback);
+
+        Assert.Equal(
+            SubmissionStatus.Submitted,
+            submission.SubmissionStatus);
+    }
 }
