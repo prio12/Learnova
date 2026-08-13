@@ -12,3 +12,8 @@ export interface Submission {
   feedback: string | null;
   submissionStatus: SubmissionStatus;
 }
+
+export interface SubmissionGradeFormData {
+  marks: number;
+  feedback: string;
+}
