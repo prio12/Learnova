@@ -55,6 +55,16 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
+//data seeding
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+    await db.Database.MigrateAsync();
+
+    await DatabaseSeeder.SeedAsync(scope.ServiceProvider);
+}
+
 
 if (app.Environment.IsDevelopment())
 {
