@@ -2,7 +2,7 @@
 
 import type { AxiosError } from 'axios';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 import { PageHeader } from '@/components/layout/PageHeader';
@@ -42,6 +42,11 @@ interface SubjectForm {
   teacherId: string | null;
 }
 
+interface CourseForm {
+  name: string;
+  description: string;
+}
+
 interface ApiErrorResponse {
   message?: string;
 }
@@ -49,6 +54,7 @@ interface ApiErrorResponse {
 export default function CourseDetailsPage() {
   const params = useParams<{ id: string }>();
   const courseId = params.id;
+  const router = useRouter();
 
   const [course, setCourse] = useState<Course | null>(null);
   const [subjects, setSubjects] = useState<Subject[]>([]);
@@ -67,6 +73,20 @@ export default function CourseDetailsPage() {
 
   const [isSaving, setIsSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+
+  const [isEditCourseOpen, setIsEditCourseOpen] = useState(false);
+  const [courseForm, setCourseForm] = useState<CourseForm>({
+    name: '',
+    description: '',
+  });
+  const [isSavingCourse, setIsSavingCourse] = useState(false);
+  const [courseFormError, setCourseFormError] = useState<string | null>(null);
+
+  const [isDeleteCourseOpen, setIsDeleteCourseOpen] = useState(false);
+  const [isDeletingCourse, setIsDeletingCourse] = useState(false);
+  const [deleteCourseError, setDeleteCourseError] = useState<string | null>(
+    null,
+  );
 
   useEffect(() => {
     const loadData = async () => {
@@ -187,6 +207,94 @@ export default function CourseDetailsPage() {
     }
   };
 
+  const openEditCourse = () => {
+    if (!course) {
+      return;
+    }
+
+    setCourseForm({
+      name: course.name,
+      description: course.description ?? '',
+    });
+    setCourseFormError(null);
+    setIsEditCourseOpen(true);
+  };
+
+  const closeEditCourse = () => {
+    if (isSavingCourse) {
+      return;
+    }
+
+    setIsEditCourseOpen(false);
+    setCourseFormError(null);
+  };
+
+  const saveCourse = async () => {
+    if (!courseForm.name.trim()) {
+      setCourseFormError('Course name is required.');
+      return;
+    }
+
+    setCourseFormError(null);
+    setIsSavingCourse(true);
+
+    try {
+      const response = await api.put<Course>(`/api/Course/${courseId}`, {
+        name: courseForm.name.trim(),
+        description: courseForm.description.trim() || null,
+      });
+
+      setCourse(response.data);
+      setIsEditCourseOpen(false);
+    } catch (error) {
+      const axiosError = error as AxiosError<ApiErrorResponse>;
+
+      setCourseFormError(
+        axiosError.response?.data?.message ??
+          'The course could not be updated.',
+      );
+    } finally {
+      setIsSavingCourse(false);
+    }
+  };
+
+  const openDeleteCourse = () => {
+    setDeleteCourseError(null);
+    setIsDeleteCourseOpen(true);
+  };
+
+  const closeDeleteCourse = () => {
+    if (isDeletingCourse) {
+      return;
+    }
+
+    setIsDeleteCourseOpen(false);
+    setDeleteCourseError(null);
+  };
+
+  const deleteCourse = async () => {
+    setDeleteCourseError(null);
+    setIsDeletingCourse(true);
+
+    try {
+      await api.delete(`/api/Course/${courseId}`);
+      router.push('/admin/courses');
+    } catch (error) {
+      const axiosError = error as AxiosError<ApiErrorResponse>;
+
+      if (axiosError.response?.status === 409) {
+        setDeleteCourseError(
+          axiosError.response?.data?.message ??
+            'This course cannot be deleted because it has related data.',
+        );
+      } else {
+        setDeleteCourseError('The course could not be deleted.');
+      }
+    } finally {
+      setIsDeletingCourse(false);
+    }
+  };
+
   const columns: DataTableColumn<Subject>[] = [
     {
       key: 'name',
@@ -280,6 +388,17 @@ export default function CourseDetailsPage() {
           description={
             course.description ??
             'Manage the subjects and teacher assignments for this course.'
+          }
+          actions={
+            <div className="flex gap-2">
+              <Button variant="secondary" onClick={openEditCourse}>
+                Edit
+              </Button>
+
+              <Button variant="danger" onClick={openDeleteCourse}>
+                Delete
+              </Button>
+            </div>
           }
         />
 
@@ -421,6 +540,126 @@ export default function CourseDetailsPage() {
                 : editingSubject
                   ? 'Save changes'
                   : 'Add subject'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        open={isEditCourseOpen}
+        title="Edit course"
+        onClose={closeEditCourse}
+      >
+        <div className="space-y-4">
+          <Input
+            id="edit-course-name"
+            label="Course name"
+            value={courseForm.name}
+            onChange={(event) =>
+              setCourseForm((current) => ({
+                ...current,
+                name: event.target.value,
+              }))
+            }
+            placeholder="e.g. Computer Science"
+            disabled={isSavingCourse}
+          />
+
+          <div className="space-y-1.5">
+            <label
+              htmlFor="edit-course-description"
+              className="block text-[13px] font-medium text-(--text-primary)"
+            >
+              Description
+            </label>
+
+            <textarea
+              id="edit-course-description"
+              value={courseForm.description}
+              onChange={(event) =>
+                setCourseForm((current) => ({
+                  ...current,
+                  description: event.target.value,
+                }))
+              }
+              rows={4}
+              disabled={isSavingCourse}
+              placeholder="A short description of the course."
+              className="w-full resize-none rounded-md border border-(--border) bg-(--surface) px-3 py-2 text-sm text-(--text-primary) outline-none transition-colors duration-150 placeholder:text-(--text-placeholder) focus:border-(--accent) focus:ring-2 focus:ring-indigo-100 disabled:cursor-not-allowed disabled:opacity-60"
+            />
+          </div>
+
+          {courseFormError && (
+            <div
+              role="alert"
+              className="rounded-md border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-(--danger)"
+            >
+              {courseFormError}
+            </div>
+          )}
+
+          <div className="flex justify-end gap-2 pt-2">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={closeEditCourse}
+              disabled={isSavingCourse}
+            >
+              Cancel
+            </Button>
+
+            <Button
+              type="button"
+              onClick={saveCourse}
+              disabled={isSavingCourse}
+            >
+              {isSavingCourse ? 'Saving...' : 'Save changes'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
+      <Modal
+        open={isDeleteCourseOpen}
+        title="Delete course"
+        onClose={closeDeleteCourse}
+        width="sm"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-(--text-secondary)">
+            Are you sure you want to delete{' '}
+            <span className="font-medium text-(--text-primary)">
+              {course.name}
+            </span>
+            ? This action cannot be undone.
+          </p>
+
+          {deleteCourseError && (
+            <div
+              role="alert"
+              className="rounded-md border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-(--danger)"
+            >
+              {deleteCourseError}
+            </div>
+          )}
+
+          <div className="flex justify-end gap-2 pt-2">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={closeDeleteCourse}
+              disabled={isDeletingCourse}
+            >
+              Cancel
+            </Button>
+
+            <Button
+              type="button"
+              variant="danger"
+              onClick={deleteCourse}
+              disabled={isDeletingCourse}
+            >
+              {isDeletingCourse ? 'Deleting...' : 'Delete course'}
             </Button>
           </div>
         </div>
