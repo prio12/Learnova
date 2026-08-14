@@ -17,3 +17,7 @@ export interface SubmissionGradeFormData {
   marks: number;
   feedback: string;
 }
+
+export interface SubmissionFormData {
+  answer: string;
+}
