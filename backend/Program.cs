@@ -27,7 +27,7 @@ builder.Services.AddCors(options =>
         policy
             .WithOrigins(
                 "http://localhost:3000",
-                "https://learnova-ivory.vercel.app"
+                "https://learnova-sepia-delta.vercel.app"
             )
             .AllowAnyHeader()
             .AllowAnyMethod();
